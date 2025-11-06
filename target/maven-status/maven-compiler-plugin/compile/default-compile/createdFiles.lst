@@ -1,0 +1,5 @@
+com\mycompany\procesos\proyectobatcher\Job.class
+com\mycompany\procesos\proyectobatcher\State.class
+com\mycompany\procesos\proyectobatcher\Workload.class
+com\mycompany\procesos\proyectobatcher\Main.class
+com\mycompany\procesos\proyectobatcher\Resources.class
