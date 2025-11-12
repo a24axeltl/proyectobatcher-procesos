@@ -12,7 +12,6 @@ public class Job {
     private String id;
     private String name;
     private int priority;
-    private int duration_ms;
     private Resources resources = new Resources();
     private Workload workload = new Workload();
     
@@ -93,20 +92,6 @@ public class Job {
      */
     public void setWorkload(Workload workload) {
         this.workload = workload;
-    }
-
-    /**
-     * @return the duration_ms
-     */
-    public int getDuration_ms() {
-        return duration_ms;
-    }
-
-    /**
-     * @param duration_ms the duration_ms to set
-     */
-    public void setDuration_ms(int duration_ms) {
-        this.duration_ms = duration_ms;
     }
     
     @Override

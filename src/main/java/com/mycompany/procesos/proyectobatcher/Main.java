@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -18,7 +19,7 @@ public class Main {
     private static int cpuCores = 4;
     private static int memoryMB = 2048;
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         State state = new State();
         File jobsDir = new File("jobs");
         
@@ -40,17 +41,33 @@ public class Main {
         state.getStateNEW().clear();
         showJobsStates(state);
         
-        
+        long PID = 0;
+        List<Process> processJobs = new ArrayList<>();
         for(Job jobREADY : state.getStateREADY()){
             if(state.getStateRUNNING().isEmpty()){
+                processCreation(jobREADY,processJobs,PID);
                 state.getStateRUNNING().addFirst(jobREADY);
             } else {
+                processCreation(jobREADY,processJobs,PID);
                 state.getStateRUNNING().add(jobREADY);
-            }
+            }  
         }
-        state.getStateREADY().clear();
         
-        showJobsStates(state);        
+        for(int i = 0; i < processJobs.size(); i++){
+            Process processJob = processJobs.get(i);
+            Job job = state.getStateRUNNING().get(i);
+            int exitCode = processJob.waitFor();
+            if(exitCode == 0){
+                state.getStateDONE().add(job);
+            } else {
+                state.getStateFAILED().add(job);
+            }
+            System.out.println("[HIJO " + PID + "]PROCESO TERMINADO CON SALIDA: " + exitCode);
+            
+            i++;
+        }
+        state.getStateRUNNING().clear();
+        showJobsStates(state);
     }
     
     private static void admisionsJobsToNewState(File jobsDir, State state) throws IOException{
@@ -60,6 +77,33 @@ public class Main {
             Job jobYAML = objectMapper.readValue(new File("jobs/" + jobFile), Job.class);
             state.getStateNEW().add(jobYAML);
         }
+    }
+    
+    private static void processCreation(Job jobREADY,List<Process> processJobs,long PID) throws IOException{
+        String cp = System.getProperty("java.class.path");
+        ProcessBuilder pb = new ProcessBuilder("java", "-cp", cp, "com.mycompany.procesos.proyectobatcher.Worker",
+                jobREADY.getId(),
+                String.valueOf(jobREADY.getWorkload().getDuration_ms()),
+                String.valueOf(jobREADY.getResources().getCpu_cores()),
+                jobREADY.getResources().getMemory());
+        pb.inheritIO();
+
+        Process processJob = pb.start();
+        processJobs.add(processJob);
+
+        PID = processJob.pid();
+    }
+    
+    private static void showJobsStates(State state){
+        System.out.println("State Jobs:");
+        System.out.println("NEW: " + state.getStateNEW());
+        System.out.println("READY: " + state.getStateREADY());
+        System.out.println("WAITING: " +state.getStateWAITING());
+        System.out.println("---------------------------------------");
+        System.out.println("RUNNING: " +state.getStateRUNNING());
+        System.out.println("DONE: " +state.getStateDONE());
+        System.out.println("FAILED: " +state.getStateFAILED());
+        System.out.println();
     }
     
     private static ArrayList<Job> priorityOrder(State state){
@@ -75,17 +119,5 @@ public class Main {
             }
         }
         return listJob;
-    }
-    
-    private static void showJobsStates(State state){
-        System.out.println("State Jobs:");
-        System.out.println("NEW: " + state.getStateNEW());
-        System.out.println("READY: " + state.getStateREADY());
-        System.out.println("WAITING: " +state.getStateWAITING());
-        System.out.println("---------------------------------------");
-        System.out.println("RUNNING: " +state.getStateRUNNING());
-        System.out.println("DONE: " +state.getStateDONE());
-        System.out.println("FAILED: " +state.getStateFAILED());
-        System.out.println();
     }
 }

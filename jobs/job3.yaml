@@ -2,7 +2,7 @@ id: job-0003
 name: "Indexar informes financieros"
 priority: 1
 resources:
-  cpu_cores: 1
-  memory: "512 MB"
+  cpu_cores: 4
+  memory: "2048 MB"
 workload:
   duration_ms: 15000
