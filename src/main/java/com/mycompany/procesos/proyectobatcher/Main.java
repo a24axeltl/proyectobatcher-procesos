@@ -15,21 +15,14 @@ import java.util.ArrayList;
  * @author W10-Portable
  */
 public class Main {
+    private static int cpuCores = 4;
+    private static int memoryMB = 2048;
+    
     public static void main(String[] args) throws IOException {
-        int cpuCores = 1;
-        int memoryMB = 256;
-        
         State state = new State();
-        
         File jobsDir = new File("jobs");
-        String[] jobsFiles = jobsDir.list();
-        for(String jobFile : jobsFiles){
-            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-            Job jobYAML = objectMapper.readValue(new File("jobs/" + jobFile), Job.class);
-            state.getStateNEW().add(jobYAML);
-        }
         
-        state.setStateNEW(priorityOrder(state));
+        admisionsJobsToNewState(jobsDir,state);
         showJobsStates(state);
         
         for(Job jobNEW : state.getStateNEW()){            
@@ -45,8 +38,28 @@ public class Main {
             }
         }
         state.getStateNEW().clear();
-        
         showJobsStates(state);
+        
+        
+        for(Job jobREADY : state.getStateREADY()){
+            if(state.getStateRUNNING().isEmpty()){
+                state.getStateRUNNING().addFirst(jobREADY);
+            } else {
+                state.getStateRUNNING().add(jobREADY);
+            }
+        }
+        state.getStateREADY().clear();
+        
+        showJobsStates(state);        
+    }
+    
+    private static void admisionsJobsToNewState(File jobsDir, State state) throws IOException{
+        String[] jobsFiles = jobsDir.list();
+        for(String jobFile : jobsFiles){
+            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+            Job jobYAML = objectMapper.readValue(new File("jobs/" + jobFile), Job.class);
+            state.getStateNEW().add(jobYAML);
+        }
     }
     
     private static ArrayList<Job> priorityOrder(State state){
@@ -69,6 +82,10 @@ public class Main {
         System.out.println("NEW: " + state.getStateNEW());
         System.out.println("READY: " + state.getStateREADY());
         System.out.println("WAITING: " +state.getStateWAITING());
+        System.out.println("---------------------------------------");
+        System.out.println("RUNNING: " +state.getStateRUNNING());
+        System.out.println("DONE: " +state.getStateDONE());
+        System.out.println("FAILED: " +state.getStateFAILED());
         System.out.println();
     }
 }

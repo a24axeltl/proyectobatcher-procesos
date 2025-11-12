@@ -14,11 +14,17 @@ public class State {
     private ArrayList<Job> stateNEW;
     private ArrayList<Job> stateREADY;
     private ArrayList<Job> stateWAITING;
+    private ArrayList<Job> stateRUNNING;
+    private ArrayList<Job> stateDONE;
+    private ArrayList<Job> stateFAILED;
     
     public State(){
         stateNEW = new ArrayList<>();
         stateREADY = new ArrayList<>();
         stateWAITING = new ArrayList<>();
+        stateRUNNING = new ArrayList<>();
+        stateDONE = new ArrayList<>();
+        stateFAILED = new ArrayList<>();
     }
 
     /**
@@ -61,5 +67,47 @@ public class State {
      */
     public void setStateWAITING(ArrayList<Job> stateWAITING) {
         this.stateWAITING = stateWAITING;
+    }
+
+    /**
+     * @return the stateDONE
+     */
+    public ArrayList<Job> getStateDONE() {
+        return stateDONE;
+    }
+
+    /**
+     * @param stateDONE the stateDONE to set
+     */
+    public void setStateDONE(ArrayList<Job> stateDONE) {
+        this.stateDONE = stateDONE;
+    }
+
+    /**
+     * @return the stateFAILED
+     */
+    public ArrayList<Job> getStateFAILED() {
+        return stateFAILED;
+    }
+
+    /**
+     * @param stateFAILED the stateFAILED to set
+     */
+    public void setStateFAILED(ArrayList<Job> stateFAILED) {
+        this.stateFAILED = stateFAILED;
+    }
+
+    /**
+     * @return the stateRUNNING
+     */
+    public ArrayList<Job> getStateRUNNING() {
+        return stateRUNNING;
+    }
+
+    /**
+     * @param stateRUNNING the stateRUNNING to set
+     */
+    public void setStateRUNNING(ArrayList<Job> stateRUNNING) {
+        this.stateRUNNING = stateRUNNING;
     }
 }

@@ -1,6 +1,6 @@
-id: job-0001
-name: "Indexar informes"
-priority: 2
+id: job-0003
+name: "Indexar informes financieros"
+priority: 1
 resources:
   cpu_cores: 1
   memory: "512 MB"
