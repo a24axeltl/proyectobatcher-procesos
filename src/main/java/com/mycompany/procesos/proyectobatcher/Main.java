@@ -41,17 +41,17 @@ public class Main {
         state.getStateNEW().clear();
         showJobsStates(state);
         
-        long PID = 0;
         List<Process> processJobs = new ArrayList<>();
         for(Job jobREADY : state.getStateREADY()){
             if(state.getStateRUNNING().isEmpty()){
-                processCreation(jobREADY,processJobs,PID);
+                processCreation(jobREADY,processJobs);
                 state.getStateRUNNING().addFirst(jobREADY);
             } else {
-                processCreation(jobREADY,processJobs,PID);
+                processCreation(jobREADY,processJobs);
                 state.getStateRUNNING().add(jobREADY);
             }  
         }
+        state.getStateREADY().clear();
         
         for(int i = 0; i < processJobs.size(); i++){
             Process processJob = processJobs.get(i);
@@ -59,10 +59,13 @@ public class Main {
             int exitCode = processJob.waitFor();
             if(exitCode == 0){
                 state.getStateDONE().add(job);
+                freeResources(job);
+                
             } else {
                 state.getStateFAILED().add(job);
+                freeResources(job);
             }
-            System.out.println("[HIJO " + PID + "]PROCESO TERMINADO CON SALIDA: " + exitCode);
+            System.out.println("[HIJO " + processJob.pid() + "]PROCESO TERMINADO CON SALIDA: " + exitCode);
             
             i++;
         }
@@ -79,7 +82,7 @@ public class Main {
         }
     }
     
-    private static void processCreation(Job jobREADY,List<Process> processJobs,long PID) throws IOException{
+    private static void processCreation(Job jobREADY,List<Process> processJobs) throws IOException{
         String cp = System.getProperty("java.class.path");
         ProcessBuilder pb = new ProcessBuilder("java", "-cp", cp, "com.mycompany.procesos.proyectobatcher.Worker",
                 jobREADY.getId(),
@@ -90,8 +93,13 @@ public class Main {
 
         Process processJob = pb.start();
         processJobs.add(processJob);
-
-        PID = processJob.pid();
+    }
+    
+    private static void freeResources(Job job){
+        cpuCores = cpuCores + job.getResources().getCpu_cores();
+        String[] memoryJob = job.getResources().getMemory().split(" ");
+        int memoryValue = Integer.parseInt(memoryJob[0]);
+        memoryMB = memoryMB + memoryValue;
     }
     
     private static void showJobsStates(State state){
