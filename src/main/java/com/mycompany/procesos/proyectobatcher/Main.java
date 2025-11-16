@@ -6,8 +6,10 @@ package com.mycompany.procesos.proyectobatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,17 +45,25 @@ public class Main {
         showJobsStates(state);
         
         List<Process> processJobs = new ArrayList<>();
+        List<BufferedReader> readersJobs = new ArrayList<>();
         for(Job jobREADY : state.getStateREADY()){
             if(state.getStateRUNNING().isEmpty()){
-                processCreation(jobREADY,processJobs);
+                processCreation(jobREADY,processJobs,readersJobs);
                 state.getStateRUNNING().add(0,jobREADY);
             } else {
-                processCreation(jobREADY,processJobs);
+                processCreation(jobREADY,processJobs,readersJobs);
                 state.getStateRUNNING().add(jobREADY);
             }  
         }
         state.getStateREADY().clear();
         showJobsStates(state);
+        
+        for(BufferedReader lectorJob : readersJobs){
+            String line = lectorJob.readLine();
+            if(line != null){
+                System.out.println(line);
+            }
+        }
         
         for(int i = 0; i < processJobs.size(); i++){
             Process processJob = processJobs.get(i);
@@ -96,7 +106,7 @@ public class Main {
         memoryMB = memoryMB + memoryValue;
     }
     
-    private static void processCreation(Job jobREADY,List<Process> processJobs) throws IOException{
+    private static void processCreation(Job jobREADY,List<Process> processJobs, List<BufferedReader> readersJobs) throws IOException{
         String cp = System.getProperty("java.class.path");
         ProcessBuilder pb = new ProcessBuilder("java", "-cp", cp, "com.mycompany.procesos.proyectobatcher.Worker",
                 jobREADY.getId(),
@@ -107,6 +117,7 @@ public class Main {
 
         Process processJob = pb.start();
         processJobs.add(processJob);
+        readersJobs.add(new BufferedReader(new InputStreamReader(processJob.getInputStream())));
     }
     
     private static void showJobsStates(State state){
