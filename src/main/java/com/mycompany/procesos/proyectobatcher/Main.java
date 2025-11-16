@@ -29,58 +29,68 @@ public class Main {
         admisionsJobsToNewState(jobsDir,state);
         showJobsStates(state);
         
-        for(Job jobNEW : state.getStateNEW()){            
+        List<Job> stateNEW_Copy = new ArrayList<>(state.getStateNEW());
+        for (Job jobNEW : stateNEW_Copy) {
             String[] memoryJob = jobNEW.getResources().getMemory().split(" ");
             int cpuCoresValue = jobNEW.getResources().getCpu_cores();
             int memoryValue = Integer.parseInt(memoryJob[0]);
-            if(cpuCores >= cpuCoresValue && memoryMB >= memoryValue){
+
+            if (cpuCores >= cpuCoresValue && memoryMB >= memoryValue) {
                 state.getStateREADY().add(jobNEW);
+                state.getStateNEW().remove(jobNEW);
                 cpuCores = cpuCores - cpuCoresValue;
                 memoryMB = memoryMB - memoryValue;
             } else {
                 state.getStateWAITING().add(jobNEW);
+                state.getStateNEW().remove(jobNEW);
             }
         }
-        state.getStateNEW().clear();
         showJobsStates(state);
         
-        List<Process> processJobs = new ArrayList<>();
-        List<BufferedReader> readersJobs = new ArrayList<>();
-        for(Job jobREADY : state.getStateREADY()){
-            if(state.getStateRUNNING().isEmpty()){
-                processCreation(jobREADY,processJobs,readersJobs);
-                state.getStateRUNNING().add(0,jobREADY);
-            } else {
-                processCreation(jobREADY,processJobs,readersJobs);
-                state.getStateRUNNING().add(jobREADY);
-            }  
-        }
-        state.getStateREADY().clear();
-        showJobsStates(state);
-        
-        for(BufferedReader lectorJob : readersJobs){
-            String line = lectorJob.readLine();
-            if(line != null){
-                System.out.println(line);
+        while(!state.getStateWAITING().isEmpty() || !state.getStateRUNNING().isEmpty()){
+            checkWaitingJobs(state);
+            
+            List<Process> processJobs = new ArrayList<>();
+            List<BufferedReader> readersJobs = new ArrayList<>();
+
+            List<Job> stateREADY_Copy = new ArrayList<>(state.getStateREADY());
+            for (Job jobREADY : stateREADY_Copy) {
+                if (state.getStateRUNNING().isEmpty()) {
+                    processCreation(jobREADY, processJobs, readersJobs);
+                    state.getStateRUNNING().add(0, jobREADY);
+                    state.getStateREADY().remove(jobREADY);
+                } else {
+                    processCreation(jobREADY, processJobs, readersJobs);
+                    state.getStateRUNNING().add(jobREADY);
+                    state.getStateREADY().remove(jobREADY);
+                }
             }
-        }
-        
-        for(int i = 0; i < processJobs.size(); i++){
-            Process processJob = processJobs.get(i);
-            Job job = state.getStateRUNNING().get(i);
-            int exitCode = processJob.waitFor();
-            if(exitCode == 0){
-                state.getStateDONE().add(job);
-                freeResources(job);
-                
-            } else {
-                state.getStateFAILED().add(job);
-                freeResources(job);
+            showJobsStates(state);
+
+            for (BufferedReader lectorJob : readersJobs) {
+                String line;
+                while ((line = lectorJob.readLine()) != null) {
+                    System.out.println(line);
+                }
             }
-            System.out.println("[HIJO " + processJob.pid() + "]PROCESO TERMINADO CON SALIDA: " + exitCode);
+
+            for (int i = 0; i < processJobs.size(); i++) {
+                Process processJob = processJobs.get(i);
+                Job job = state.getStateRUNNING().get(i);
+                int exitCode = processJob.waitFor();
+                if (exitCode == 0) {
+                    state.getStateDONE().add(job);
+                    freeResources(job);
+
+                } else {
+                    state.getStateFAILED().add(job);
+                    freeResources(job);
+                }
+                System.out.println("[HIJO " + processJob.pid() + "]PROCESO TERMINADO CON SALIDA: " + exitCode);
+            }
+            state.getStateRUNNING().clear();
+            showJobsStates(state);
         }
-        state.getStateRUNNING().clear();
-        showJobsStates(state);
     }
     
     private static void admisionsJobsToNewState(File jobsDir, State state) throws IOException{
@@ -106,6 +116,22 @@ public class Main {
         memoryMB = memoryMB + memoryValue;
     }
     
+    private static void checkWaitingJobs(State state){
+        List<Job> stateWAITY_Copy = new ArrayList<>(state.getStateWAITING());
+        for (Job jobWAITING : stateWAITY_Copy) {
+            String[] memoryJob = jobWAITING.getResources().getMemory().split(" ");
+            int cpuCoresValue = jobWAITING.getResources().getCpu_cores();
+            int memoryValue = Integer.parseInt(memoryJob[0]);
+
+            if (cpuCores >= cpuCoresValue && memoryMB >= memoryValue) {
+                state.getStateREADY().add(jobWAITING);
+                state.getStateWAITING().remove(jobWAITING);
+                cpuCores = cpuCores - cpuCoresValue;
+                memoryMB = memoryMB - memoryValue;
+            }
+        }
+    }
+    
     private static void processCreation(Job jobREADY,List<Process> processJobs, List<BufferedReader> readersJobs) throws IOException{
         String cp = System.getProperty("java.class.path");
         ProcessBuilder pb = new ProcessBuilder("java", "-cp", cp, "com.mycompany.procesos.proyectobatcher.Worker",
@@ -113,7 +139,6 @@ public class Main {
                 String.valueOf(jobREADY.getWorkload().getDuration_ms()),
                 String.valueOf(jobREADY.getResources().getCpu_cores()),
                 jobREADY.getResources().getMemory());
-        pb.inheritIO();
 
         Process processJob = pb.start();
         processJobs.add(processJob);
