@@ -1,6 +1,7 @@
-com\mycompany\procesos\proyectobatcher\Job.class
-com\mycompany\procesos\proyectobatcher\State.class
-com\mycompany\procesos\proyectobatcher\Workload.class
-com\mycompany\procesos\proyectobatcher\Worker.class
-com\mycompany\procesos\proyectobatcher\Main.class
-com\mycompany\procesos\proyectobatcher\Resources.class
+main\PSPBatcher.class
+jobData\Workload.class
+computerManagment\Computer.class
+main\WorkerBatcher.class
+statesManagment\State.class
+jobData\Resources.class
+jobData\Job.class

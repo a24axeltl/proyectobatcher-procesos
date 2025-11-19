@@ -1,5 +1,5 @@
 id: job-0002
-name: "Indexar informes financieros"
+name: "Indexar informes financieros del 1º trimestre"
 priority: 1
 resources:
   cpu_cores: 1

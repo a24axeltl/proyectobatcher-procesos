@@ -1,0 +1,8 @@
+id: job-0000-EMT
+name: "Indexar informes"
+priority: 1
+resources:
+  cpu_cores: 0
+  memory: "0 KB"
+workload:
+  duration_ms: 500

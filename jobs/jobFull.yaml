@@ -1,0 +1,8 @@
+id: job-0000-Anuales
+name: "Indexar informes anuales"
+priority: 1
+resources:
+  cpu_cores: 8
+  memory: "4048 MB"
+workload:
+  duration_ms: 15000

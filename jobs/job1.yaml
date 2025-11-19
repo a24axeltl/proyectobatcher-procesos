@@ -1,5 +1,5 @@
 id: job-0001
-name: "Indexar informes"
+name: "Indexar informes empleados"
 priority: 2
 resources:
   cpu_cores: 2

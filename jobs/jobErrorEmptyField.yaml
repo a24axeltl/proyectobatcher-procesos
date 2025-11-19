@@ -1,0 +1,8 @@
+id: job-0000-EEF
+name: 
+priority: 0
+resources:
+  cpu_cores: 2
+  memory: "1024 MB"
+workload:
+  duration_ms: 500
