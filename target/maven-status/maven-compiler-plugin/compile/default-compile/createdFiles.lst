@@ -1,7 +1,7 @@
 main\PSPBatcher.class
 jobData\Workload.class
-computerManagment\Computer.class
 main\WorkerBatcher.class
+jobData\Job.class
+computerManagment\Computer.class
 statesManagment\State.class
 jobData\Resources.class
-jobData\Job.class

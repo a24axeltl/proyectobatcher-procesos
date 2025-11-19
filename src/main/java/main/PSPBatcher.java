@@ -25,22 +25,26 @@ public class PSPBatcher {
     private static final int cpuCoresMax = 4;
     private static final int memoryMbMax = 2048;
     
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
         Computer computer = new Computer(cpuCoresMax, memoryMbMax);
         State state = new State();
-        
-        admisionsJobsToNewState(state);
-        showJobsStates(state, computer);
-        
-        if(!state.getStateNEW().isEmpty()){
-            admisionsNewJobsToReadyState(state, computer);
-            
+        try {
+            admisionsJobsToNewState(state);
             showJobsStates(state, computer);
-            runningProcessOfJobs(state, computer);
-            
-            while (!state.getStateWAITING().isEmpty() || !state.getStateRUNNING().isEmpty() || !state.getStateREADY().isEmpty()) {
+
+            if (!state.getStateNEW().isEmpty()) {
+                admisionsNewJobsToReadyState(state, computer);
+
+                showJobsStates(state, computer);
                 runningProcessOfJobs(state, computer);
+                
+                //Si hay trabajos en WAITING, ejecutarlos
+                while (!state.getStateWAITING().isEmpty() || !state.getStateRUNNING().isEmpty() || !state.getStateREADY().isEmpty()) {
+                    runningProcessOfJobs(state, computer);
+                }
             }
+        } catch(IOException | InterruptedException ex){
+            System.err.println(ex.getMessage());
         }
     }
     
@@ -65,6 +69,7 @@ public class PSPBatcher {
             for (String jobFile : jobsFiles) {
                 ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
                 Job jobYAML = objectMapper.readValue(new File("jobs/" + jobFile), Job.class);
+                
                 if(jobYAML.getId() != null && jobYAML.getName() != null && jobYAML.getResources().getMemory() != null){
                     if (!jobYAML.getId().isEmpty() && !jobYAML.getName().isEmpty() && (jobYAML.getPriority() >= 0 && jobYAML.getPriority() <= 4) && jobYAML.getCpuValue() > 0 && jobYAML.getMemoryValue() > 0 && jobYAML.getWorkload().getDuration_ms() > 0) {
                         state.getStateNEW().add(jobYAML);
@@ -86,6 +91,7 @@ public class PSPBatcher {
         for (Job jobNEW : stateNEW_Copy) {
             int cpuCoresValue = jobNEW.getCpuValue();
             int memoryValue = jobNEW.getMemoryValue();
+            
             if(cpuCoresValue <= cpuCoresMax && memoryValue <= memoryValue){
                 if (computer.getCpuCores() >= cpuCoresValue && computer.getMemoryMB() >= memoryValue) {
                     state.getStateREADY().add(jobNEW);
@@ -134,6 +140,7 @@ public class PSPBatcher {
                 jobREADY.getResources().getMemory());
 
         Process processJob = pb.start();
+        jobREADY.setPid(processJob.pid());
         processJobs.add(processJob);
         readersJobs.add(new BufferedReader(new InputStreamReader(processJob.getInputStream())));
     }
@@ -172,20 +179,6 @@ public class PSPBatcher {
         showJobsStates(state, computer);
     }
     
-    private static void checkWaitingJobs(State state, Computer computer){
-        List<Job> stateWAITY_Copy = new ArrayList<>(state.getStateWAITING());
-        for (Job jobWAITING : stateWAITY_Copy) {
-            int cpuCoresValue = jobWAITING.getCpuValue();
-            int memoryValue = jobWAITING.getMemoryValue();
-
-            if (computer.getCpuCores() >= cpuCoresValue && computer.getMemoryMB() >= memoryValue) {
-                state.getStateREADY().add(jobWAITING);
-                state.getStateWAITING().remove(jobWAITING);
-                reserveResources(jobWAITING, computer);
-            }
-        }
-    }
-    
     private static void showJobsStates(State state, Computer computer) throws InterruptedException{
         System.out.println("=========================================================================");
         System.out.println("State Jobs:");
@@ -200,6 +193,20 @@ public class PSPBatcher {
         System.out.println("FAILED("+state.getStateFAILED()+": " + state.getStateFAILED());
         System.out.println("=========================================================================");
         Thread.sleep(1800);
+    }
+    
+    private static void checkWaitingJobs(State state, Computer computer){
+        List<Job> stateWAITY_Copy = new ArrayList<>(state.getStateWAITING());
+        for (Job jobWAITING : stateWAITY_Copy) {
+            int cpuCoresValue = jobWAITING.getCpuValue();
+            int memoryValue = jobWAITING.getMemoryValue();
+
+            if (computer.getCpuCores() >= cpuCoresValue && computer.getMemoryMB() >= memoryValue) {
+                state.getStateREADY().add(jobWAITING);
+                state.getStateWAITING().remove(jobWAITING);
+                reserveResources(jobWAITING, computer);
+            }
+        }
     }
     
     private static void freeResources(Job job, Computer computer){

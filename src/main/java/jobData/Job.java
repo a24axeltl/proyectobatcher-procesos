@@ -17,6 +17,8 @@ public class Job {
     
     private long startTime;
     private long durationTime;
+    private long pid;
+    
     
     public Job(){
         id = "";
@@ -28,6 +30,7 @@ public class Job {
         
         startTime = 0;
         durationTime = 0;
+        pid = 0;
     }
     
     public int getCpuValue(){
@@ -133,7 +136,8 @@ public class Job {
                 "|Priority: " + priority + 
                 "|Resources: CPU cores = " + this.getCpuValue() + ", memory = " + this.getMemoryValue() + 
                 "|Workload: duration(ms) = " + workload.getDuration_ms() + 
-                "|Duration: " + this.getDurationTime()/1e9 + "}";
+                "|Duration: " + this.getDurationTime()/1e9 + 
+                "|PID: " + pid + "}";
     }
 
     /**
@@ -162,5 +166,19 @@ public class Job {
      */
     public void setDurationTime(long durationTime) {
         this.durationTime = durationTime;
+    }
+
+    /**
+     * @return the pid
+     */
+    public long getPid() {
+        return pid;
+    }
+
+    /**
+     * @param pid the pid to set
+     */
+    public void setPid(long pid) {
+        this.pid = pid;
     }
 }

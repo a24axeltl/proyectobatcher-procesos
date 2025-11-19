@@ -5,6 +5,7 @@
 package main;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 /**
@@ -43,8 +44,8 @@ public class WorkerBatcher {
                     elapsed += 500;
                 }
                 System.exit(0);
-            } catch (Exception e){
-                System.out.println(e.getMessage());
+            } catch(Exception ex){
+                System.err.println(ex.getMessage());
                 System.exit(1);
             }
         }
